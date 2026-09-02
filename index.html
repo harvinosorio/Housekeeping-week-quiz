@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>Housekeeping Week — Front Office × Housekeeping</title>
+<style>
+:root{--bg:#f6f3ee;--ink:#171717;--muted:#6b675f;--card:#fffdf9;--line:#ded8ce;--accent:#171717;--soft:#eee9df;--good:#1f6b45;--bad:#8b2635}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:820px;margin:auto;padding:28px 18px 48px}.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:clamp(22px,5vw,42px);box-shadow:0 12px 35px rgba(40,32,20,.06)}
+.kicker{text-transform:uppercase;letter-spacing:.15em;font-size:12px;font-weight:800;color:var(--muted)}
+h1{font-size:clamp(38px,8vw,68px);line-height:.98;letter-spacing:-.055em;margin:18px 0}
+h2{font-size:clamp(27px,5vw,42px);line-height:1.08;letter-spacing:-.035em;margin:22px 0}
+p{line-height:1.6}.muted{color:var(--muted)}.note{background:var(--soft);border-left:4px solid var(--accent);padding:15px 17px;border-radius:12px;line-height:1.5}
+input{width:100%;padding:15px 16px;border:1px solid var(--line);border-radius:14px;background:white;font-size:17px;outline:none}input:focus{border-color:#555;box-shadow:0 0 0 3px #00000012}
+button{font:inherit}.btn{min-height:50px;padding:13px 19px;border-radius:14px;border:1px solid var(--line);background:white;color:var(--ink);font-weight:800;cursor:pointer}.btn:hover{border-color:#777}.primary{background:#171717;color:#fff;border-color:#171717}
+.options{display:grid;gap:12px;margin-top:28px}.option{width:100%;text-align:left;padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff;cursor:pointer;font-weight:700;line-height:1.4}.option:hover{border-color:#555;transform:translateY(-1px)}
+.progress{height:7px;background:var(--soft);border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:#171717}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.reaction{font-size:64px;margin-top:20px;animation:bounce .8s ease both}.gif-wrap{margin-top:18px;border-radius:20px;overflow:hidden;background:#eee9df;max-width:520px}.gif-wrap img{display:block;width:100%;height:auto;max-height:300px;object-fit:cover}.gif-credit{font-size:11px;color:var(--muted);padding:7px 10px}.verdict-good{color:var(--good)}.verdict-bad{color:var(--bad)}
+@keyframes bounce{0%{transform:scale(.6) rotate(-8deg);opacity:0}60%{transform:scale(1.12) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.score{font-size:clamp(64px,15vw,108px);font-weight:950;letter-spacing:-.08em;line-height:1}.rank{display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}.rank:last-child{border-bottom:0}.medal{font-size:24px;text-align:center}.error{color:var(--bad);font-weight:700;margin-top:10px}.small{font-size:13px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+@media(max-width:520px){main{padding:14px 12px 35px}.card{border-radius:20px;padding:22px}.option{padding:16px}}
+</style>
+</head>
+<body>
+<main><div id="app" class="card"></div></main>
+<script>
+const CONFIG={
+  SUPABASE_URL:"https://rwrmuzkxmmrzvqbhtpms.supabase.co",
+  SUPABASE_ANON_KEY:"sb_publishable_77Dn5TY6EWAuR57-MHFJJg_QqtuoxM4"
+};
+
+const questions=[
+{q:"A guest has a guaranteed Day Use check-in at 08:00 AM. The room is assigned at 07:15 AM. What is the most accurate statement?",a:["The room will still be ready by 08:00 AM","Housekeeping can prioritize it and guarantee readiness","Readiness by 08:00 AM can no longer be guaranteed","Front Office can mark the room as Ready"],c:2,why:"Day Use rooms should be assigned no later than 06:30 AM to allow enough preparation time.",emoji:"⏰",good:"OKAY, CLOCKED IT. ⏰",bad:"THAT CLOCK IS NOT ON YOUR SIDE. 😭",sass:"07:15 AM? Housekeeping has entered the chat."},
+{q:"A room has just been marked as Pending. How long will it take until it becomes Ready?",a:["10 minutes","20 minutes","30 minutes","There is no fixed timeframe"],c:3,why:"The assigned Room Attendant may already be servicing another room, suite or area, and the room may require full cleaning rather than a simple pick-up.",emoji:"🫠",good:"LOOK AT YOU, OPERATIONAL. 👑",bad:"PENDING DOES NOT MEAN 20 MINUTES. 💀",sass:"Pending is a status, not a countdown timer."},
+{q:"A guest arrives at 12:00 PM and asks when the room will be ready. What is the best response?",a:["It should be ready in 15 minutes","Housekeeping told me 20 minutes","Check-in is guaranteed from 15:00. Another room of the same category may be offered if available","It will not take long"],c:2,why:"Specific completion times cannot normally be guaranteed.",emoji:"💅",good:"NOW THAT'S A SAFE ANSWER. 💅",bad:"WE LOVE CONFIDENCE. WE DO NOT LOVE INVENTED ETA'S. 😭",sass:"We love confidence. We do not love promises we cannot control."},
+{q:"It is already 15:30 and the room is still not Ready. What should be checked first?",a:["Whether Housekeeping forgot the room","Whether the previous guest has checked out and when","Whether Engineering entered the room","Whether Front Office assigned the wrong room"],c:1,why:"A room cannot be cleaned while it is still occupied, or if the previous guest has only just checked out.",emoji:"🔎",good:"YOU CHECKED THE RIGHT THING. 🔎",bad:"THE ROOM HAS A STORY. CHECK THE CHECK-OUT. 👀",sass:"Before blaming Housekeeping, check whether cleaning could actually start."},
+{q:"A guest changes rooms after briefly using the original room for up to 5 minutes. Which status should be used?",a:["Vacant Clean","Vacant Dirty","Ready","Pick Up"],c:3,why:"Housekeeping must inspect the room before deciding whether additional cleaning is required.",emoji:"🧹",good:"FIVE MINUTES? HOUSEKEEPING STILL HAS RECEIPTS. 🧹",bad:"THE ROOM WAS USED. YES, IT COUNTS. 🫠",sass:"A tiny room move can still create a Pick Up."},
+{q:"Are extra beds permanently installed in guest rooms?",a:["Yes","Only in suites","No, they are mobile and stored separately","Only on selected weekends"],c:2,why:"Extra beds are mobile, stored separately, available only in selected categories and must be ordered at Housekeeping.",emoji:"🛏️",good:"YOU FOUND THE EXTRA-BED LORE. 🛏️",bad:"THE EXTRA BED IS NOT A PERMANENT ROOMMATE. 😭",sass:"No, the extra bed does not live there. It has its own storage situation."},
+{q:"A guest requests an extra bed at HGI. Which statement is correct?",a:["Every room can receive an extra bed","HGI does not provide extra beds; selected QT1 rooms have sofa beds","Housekeeping can always bring one from storage","All suites have extra beds"],c:1,why:"Selected QT1 rooms contain built-in sofa beds.",emoji:"🛋️",good:"YOU KNOW YOUR HGI. 🛋️",bad:"HGI SAID: SOFA BED. THAT'S IT. 💀",sass:"At HGI, the sofa bed is doing the extra-bed job. Corporate has spoken."},
+{q:"A guest requested a baby crib yesterday, but the request was never entered into the system. Housekeeping should still know about it.",a:["True","False","Only if Front Office mentions it verbally","Only if the guest calls Housekeeping"],c:1,why:"Housekeeping can only prepare what is visible in the system.",emoji:"👻",good:"SYSTEM SAVVY. 👻",bad:"THE SYSTEM HAS NO TELEPATHY FEATURE. 👻",sass:"If it is not in the system, it has apparently entered the spirit world."},
+{q:"A guest already received the complimentary water and asks for more. What is the correct answer?",a:["Unlimited free water from Housekeeping","Front Office requests extra free bottles from Housekeeping","The guest may obtain additional water through available hotel outlets","Housekeeping decides individually"],c:2,why:"Additional water is obtained through hotel outlets and services.",emoji:"💧",good:"HYDRATED, BUT MAKE IT OPERATIONAL. 💧",bad:"THE WATER FAIRY WORKS THROUGH HOTEL OUTLETS. 💧",sass:"Housekeeping is many things. An infinite water subscription is not one of them."},
+{q:"An item is found but remains in a department office for several days. What is the biggest risk?",a:["Nothing","Housekeeping will eventually find it","The item may never be registered and therefore cannot be traced or returned","Front Office can register it later"],c:2,why:"Items must be registered immediately to be returned.",emoji:"🕵️",good:"FOUND IT? REGISTER IT. 🕵️",bad:"A DRAWER IS NOT A LOST & FOUND SYSTEM. 😭",sass:"Lost & Found works best when the “found” part is actually documented."},
+{q:"A guest disputes a minibar charge. Which department should be contacted first?",a:["Housekeeping","Security","Engineering","Food & Beverage"],c:3,why:"All minibar-related matters belong to Food & Beverage.",emoji:"🍫",good:"MINIBAR MASTERY. 🍫",bad:"THE MINIBAR HAS ENTERED F&B TERRITORY. 🚨",sass:"The minibar mystery belongs to F&B. Please direct the investigation accordingly."},
+{q:"A guest needs a sofa bed tonight. Everyone knows about it, but there is no request in the reservation. Why was it not prepared?",a:["Housekeeping forgot","Housekeeping did not check arrivals","The request was never entered into the system","Bad luck"],c:2,why:"If the request is not entered into the system, it may not appear in Housekeeping reports.",emoji:"💀",good:"SYSTEM FIELD > GROUP CHAT. 💀",bad:"IF IT ISN'T IN THE RESERVATION, IT IS A RUMOUR. 😭",sass:"“But everyone knew!” is unfortunately not a system field."}
+];
+
+let name="",index=0,score=0,selected=null;
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function configured(){return !CONFIG.SUPABASE_URL.startsWith("PASTE_") && !CONFIG.SUPABASE_ANON_KEY.startsWith("PASTE_");}
+
+function renderWelcome(){
+document.getElementById("app").innerHTML=`
+<div class="kicker">Housekeeping Week 2026</div>
+<h1>Front Office × Housekeeping<br><span>The Reality Check</span></h1>
+<p class="muted" style="font-size:19px">Things Housekeeping Wishes Front Office Knew. 😌</p>
+<div class="note" style="margin-top:24px">12 questions. One correct answer. Zero excuses.<br><br><strong>Let’s see how well Front Office really knows what happens behind “Room Not Ready”.</strong> 🧹</div>
+<label style="display:block;font-weight:800;margin-top:26px">Your name</label>
+<input id="nameInput" maxlength="40" placeholder="Enter your name" autocomplete="name">
+<div id="nameError" class="error"></div>
+<div class="actions"><button class="btn primary" id="start">Start the quiz →</button></div>`;
+document.getElementById("start").onclick=()=>{
+name=document.getElementById("nameInput").value.trim();
+if(!name){document.getElementById("nameError").textContent="Please enter your name.";return;}
+index=0;score=0;renderQuestion();
+};
+}
+
+function renderQuestion(){
+const q=questions[index];
+document.getElementById("app").innerHTML=`
+<div class="top"><span class="kicker">Question ${index+1} / ${questions.length}</span><span class="small muted">${score} correct</span></div>
+<div class="progress" style="margin-top:12px"><span style="width:${(index/questions.length)*100}%"></span></div>
+<h2>${escapeHtml(q.q)}</h2>
+<div class="options">${q.a.map((x,n)=>`<button class="option" data-n="${n}">${String.fromCharCode(65+n)}. ${escapeHtml(x)}</button>`).join("")}</div>`;
+document.querySelectorAll(".option").forEach(b=>b.onclick=()=>{selected=Number(b.dataset.n);if(selected===q.c)score++;renderFeedback();});
+}
+
+
+const GOOD_GIFS=[
+  "https://media.giphy.com/media/d20PG6M6SAFqtmce9r/giphy.gif",
+  "https://media.giphy.com/media/oFacuoPVmzZO9EdGSv/giphy.gif",
+  "https://media.giphy.com/media/NANoerqjbtNWJAwBoP/giphy.gif",
+  "https://media.giphy.com/media/TeJsFoAM36UvMeV3pZ/giphy.gif"
+];
+const BAD_GIFS=[
+  "https://media.giphy.com/media/qhS0FOOlGRZ36lVc7z/giphy.gif",
+  "https://media.giphy.com/media/n4ZQ6btIqr1H7p42a9/giphy.gif",
+  "https://media.giphy.com/media/lk5CgXmVoQ1fH8nfam/giphy.gif",
+  "https://media.giphy.com/media/vgAwEZ6To377vnTVWy/giphy.gif"
+];
+let lastGoodGif=-1,lastBadGif=-1;
+function randomGif(pool,last){
+  if(pool.length===1)return [pool[0],0];
+  let i=Math.floor(Math.random()*pool.length);
+  while(i===last)i=Math.floor(Math.random()*pool.length);
+  return [pool[i],i];
+}
+
+function renderFeedback(){
+const q=questions[index],correct=selected===q.c;
+const picked=correct?randomGif(GOOD_GIFS,lastGoodGif):randomGif(BAD_GIFS,lastBadGif);
+if(correct)lastGoodGif=picked[1];else lastBadGif=picked[1];
+const headline=correct?q.good:q.bad;
+const gif=picked[0];
+document.getElementById("app").innerHTML=`
+<div class="kicker">Question ${index+1} verdict</div>
+<div class="reaction">${q.emoji}</div>
+<div class="gif-wrap"><img src="${gif}" alt="${correct?"Celebration reaction":"Funny reaction"}" loading="eager"><div class="gif-credit">Reaction GIF via GIPHY</div></div>
+<h2 class="${correct?"verdict-good":"verdict-bad"}">${escapeHtml(headline)}</h2>
+<p style="font-size:18px;font-weight:800">${correct?"Correct — you actually know how this works.":"Not quite. The correct answer is: "+escapeHtml(q.a[q.c])}</p>
+<div class="note"><strong>WHY?</strong><br>${escapeHtml(q.why)}</div>
+<p class="muted"><em>“${escapeHtml(correct?q.sass:q.bad)}”</em></p>
+<div class="actions"><button class="btn primary" id="next">${index===questions.length-1?"See my result →":"Next question →"}</button></div>`;
+document.getElementById("next").onclick=()=>{if(index===questions.length-1)renderResult();else{index++;renderQuestion();}};
+}
+
+async function submitScore(){
+if(!configured())return {ok:false,reason:"not-configured"};
+try{
+const res=await fetch(CONFIG.SUPABASE_URL+"/rest/v1/quiz_scores",{
+method:"POST",
+headers:{"apikey":CONFIG.SUPABASE_ANON_KEY,"Authorization":"Bearer "+CONFIG.SUPABASE_ANON_KEY,"Content-Type":"application/json","Prefer":"return=minimal"},
+body:JSON.stringify({name:name,score:score,total:questions.length,percentage:Math.round(score/questions.length*100)})
+});
+if(!res.ok)return {ok:false,reason:"submit-failed"};
+return {ok:true};
+}catch(e){return {ok:false,reason:"network"}}
+}
+
+async function getLeaderboard(){
+if(!configured())return [];
+try{
+const res=await fetch(CONFIG.SUPABASE_URL+"/rest/v1/quiz_scores?select=name,score,total,percentage,created_at&order=score.desc,created_at.asc&limit=50",
+{headers:{"apikey":CONFIG.SUPABASE_ANON_KEY,"Authorization":"Bearer "+CONFIG.SUPABASE_ANON_KEY}});
+if(!res.ok)return [];
+return await res.json();
+}catch(e){return []}
+}
+
+async function renderResult(){
+document.getElementById("app").innerHTML=`<div class="kicker">Quiz complete</div><h2>${escapeHtml(name)}, you survived. 🎉</h2><div class="score">${score}/${questions.length}</div><p style="font-size:20px;font-weight:850">${Math.round(score/questions.length*100)}% · ${score===12?"HOUSEKEEPING WHISPERER 👑":score>=10?"OPERATIONALLY FLUENT 💅":score>=8?"DECENTLY HOUSEKEEPING-APPROVED 🧹":score>=6?"ROOM FOR IMPROVEMENT 👀":"PLEASE REPORT TO HOUSEKEEPING 🚨"}</p><p class="muted">You may now speak about room readiness without causing unnecessary chaos.</p><div class="note">Saving your result to the shared Housekeeping Week leaderboard…</div><div id="board" style="margin-top:26px"></div>`;
+await submitScore();
+const rows=await getLeaderboard();
+const fallback=[{name,score,total:12,percentage:Math.round(score/12*100)}];
+const data=rows.length?rows:fallback;
+document.getElementById("board").innerHTML=`<h3>🏆 Housekeeping Week Leaderboard</h3>${data.map((x,n)=>`<div class="rank"><div class="medal">${["🥇","🥈","🥉"][n]||"#"+(n+1)}</div><div><strong>${escapeHtml(x.name)}</strong><div class="small muted">${x.percentage}%</div></div><strong>${x.score}/${x.total}</strong></div>`).join("")}<p class="small muted" style="margin-top:18px">${configured()?"Live shared leaderboard":"Preview mode: connect Supabase to enable the shared leaderboard."}</p><div class="actions"><button class="btn" id="again">Take it again</button></div>`;
+document.getElementById("again").onclick=renderWelcome;
+}
+renderWelcome();
+</script>
+</body>
+</html>
